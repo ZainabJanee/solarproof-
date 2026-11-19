@@ -18,6 +18,16 @@ function isCsrfExempt(pathname: string): boolean {
   return CSRF_EXEMPT_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'))
 }
 
+/** Public, unauthenticated page routes that must never be redirected to login. */
+const PUBLIC_PATHS = [
+  '/explore',            // Public certificate explorer — no auth required
+  '/verify',             // Public certificate verifier
+]
+
+function isPublicPath(pathname: string): boolean {
+  return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'))
+}
+
 /**
  * Middleware that:
  * 1. Enforces CORS policy — restricts origins to CORS_ALLOWED_ORIGINS + localhost in dev.
@@ -67,6 +77,28 @@ export function middleware(req: NextRequest) {
     }
     // Origin not allowed — return 403
     return new NextResponse(null, { status: 403 })
+  }
+
+  // ── Public routes ─────────────────────────────────────────────────────────
+  // Public pages (e.g. /explore, /verify) require no authentication and are
+  // never redirected to login. They are also excluded from CSRF/auth gating.
+  if (isPublicPath(pathname)) {
+    const correlationId = req.headers.get('x-correlation-id') ?? crypto.randomUUID()
+    const res = NextResponse.next({
+      request: {
+        headers: new Headers({
+          ...Object.fromEntries(req.headers),
+          'x-correlation-id': correlationId,
+        }),
+      },
+    })
+    res.headers.set('x-correlation-id', correlationId)
+    if (corsHeaders) {
+      for (const [k, v] of Object.entries(corsHeaders)) {
+        res.headers.set(k, v)
+      }
+    }
+    return res
   }
 
   // ── CSRF enforcement ─────────────────────────────────────────────────────

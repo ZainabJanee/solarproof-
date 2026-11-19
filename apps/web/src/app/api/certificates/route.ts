@@ -13,6 +13,8 @@ const QuerySchema = z.object({
   status: z.enum(['active', 'retired']).nullable().optional(),
   date_from: z.string().optional(),
   date_to: z.string().optional(),
+  min_kwh: z.coerce.number().nonnegative().optional(),
+  max_kwh: z.coerce.number().nonnegative().optional(),
 })
 
 /**
@@ -29,6 +31,8 @@ const QuerySchema = z.object({
  *   status     — "active" | "retired"
  *   date_from  — ISO date string (inclusive lower bound on issued_at)
  *   date_to    — ISO date string (inclusive upper bound on issued_at)
+ *   min_kwh    — inclusive lower bound on kwh
+ *   max_kwh    — inclusive upper bound on kwh
  *
  * Cursor design:
  *   - The cursor encodes the `issued_at` timestamp of the last-seen row.
@@ -47,7 +51,17 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: parsedQuery.error.flatten() }, { status: 400 })
   }
 
-  const { limit, cursor, page, q, status, date_from: dateFrom, date_to: dateTo } = parsedQuery.data
+  const {
+    limit,
+    cursor,
+    page,
+    q,
+    status,
+    date_from: dateFrom,
+    date_to: dateTo,
+    min_kwh: minKwh,
+    max_kwh: maxKwh,
+  } = parsedQuery.data
 
   const db = createServiceClient()
 
@@ -55,7 +69,7 @@ export async function GET(req: NextRequest) {
   let query = (db as any)
     .from('certificates')
     .select(
-      'id, kwh, issued_at, retired, retired_at, retired_by, mint_tx_hash, readings!inner(meter_id)',
+      'id, kwh, issued_at, expires_at, retired, retired_at, retired_by, mint_tx_hash, readings!inner(meter_id)',
       { count: 'exact' }
     )
     .order('issued_at', { ascending: false })
@@ -73,6 +87,8 @@ export async function GET(req: NextRequest) {
   if (status === 'retired') query = query.eq('retired', true)
   if (dateFrom) query = query.gte('issued_at', dateFrom)
   if (dateTo) query = query.lte('issued_at', dateTo + 'T23:59:59.999Z')
+  if (minKwh !== undefined) query = query.gte('kwh', minKwh)
+  if (maxKwh !== undefined) query = query.lte('kwh', maxKwh)
 
   // Text search: match cert id prefix OR meter_id prefix via the joined reading
   if (q) {
@@ -86,6 +102,7 @@ export async function GET(req: NextRequest) {
     id: string
     kwh: number
     issued_at: string
+    expires_at: string | null
     retired: boolean
     retired_at: string | null
     retired_by: string | null

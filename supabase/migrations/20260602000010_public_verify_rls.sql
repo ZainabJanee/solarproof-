@@ -16,3 +16,12 @@ create policy "public: read readings for verify"
   on readings for select
   to anon
   using (true);
+
+-- The public /explore page (#782) lists all certificates with cooperative
+-- names, so anonymous visitors also need SELECT on cooperatives. This policy
+-- covers the explorer's join against cooperatives (id, name). Writes remain
+-- operator-only.
+create policy "public: read cooperatives for explore"
+  on cooperatives for select
+  to anon
+  using (true);
