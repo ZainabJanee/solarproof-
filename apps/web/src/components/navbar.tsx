@@ -23,6 +23,7 @@ const links = [
   { href: '/meters', labelKey: 'meters' },
   { href: '/certificates', labelKey: 'certificates' },
   { href: '/explore', labelKey: 'explore' },
+  { href: '/marketplace', labelKey: 'marketplace' },
   { href: '/governance', labelKey: 'governance' },
   { href: '/verify', labelKey: 'verify' },
   { href: '/admin', labelKey: 'admin' },

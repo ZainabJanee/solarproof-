@@ -4,9 +4,9 @@ export interface Database {
   public: {
     Tables: {
       cooperatives: {
-        Row: { id: string; name: string; admin_address: string; created_at: string; suspended: boolean; account_type: 'individual' | 'cooperative' }
-        Insert: { name: string; admin_address: string; suspended?: boolean; account_type?: 'individual' | 'cooperative' }
-        Update: Partial<{ name: string; admin_address: string; suspended: boolean; account_type: 'individual' | 'cooperative' }>
+        Row: { id: string; name: string; admin_address: string; created_at: string; suspended: boolean; account_type: 'individual' | 'cooperative'; evm_nft_enabled: boolean }
+        Insert: { name: string; admin_address: string; suspended?: boolean; account_type?: 'individual' | 'cooperative'; evm_nft_enabled?: boolean }
+        Update: Partial<{ name: string; admin_address: string; suspended: boolean; account_type: 'individual' | 'cooperative'; evm_nft_enabled: boolean }>
         Relationships: []
       }
       proposals: {
@@ -90,6 +90,10 @@ export interface Database {
           erc1888_issuance_status: 'pending' | 'issued' | 'failed' | null
           erc1888_tx_hash: string | null
           erc1888_issued_at: string | null
+          evm_token_id: string | null
+          evm_tx_hash: string | null
+          evm_issuance_status: 'pending' | 'issued' | 'failed' | null
+          evm_issued_at: string | null
         }
         Insert: {
           cooperative_id: string; reading_id: string
@@ -101,6 +105,10 @@ export interface Database {
           erc1888_issuance_status?: 'pending' | 'issued' | 'failed' | null
           erc1888_tx_hash?: string | null
           erc1888_issued_at?: string | null
+          evm_token_id?: string | null
+          evm_tx_hash?: string | null
+          evm_issuance_status?: 'pending' | 'issued' | 'failed' | null
+          evm_issued_at?: string | null
         }
         Update: Partial<{
           cooperative_id: string; reading_id: string
@@ -113,6 +121,10 @@ export interface Database {
           erc1888_issuance_status: 'pending' | 'issued' | 'failed' | null
           erc1888_tx_hash: string | null
           erc1888_issued_at: string | null
+          evm_token_id: string | null
+          evm_tx_hash: string | null
+          evm_issuance_status: 'pending' | 'issued' | 'failed' | null
+          evm_issued_at: string | null
         }>
         Relationships: [{ foreignKeyName: 'certificates_reading_id_fkey'; columns: ['reading_id']; referencedRelation: 'readings'; referencedColumns: ['id'] }]
       }
